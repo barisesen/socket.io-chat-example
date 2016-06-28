@@ -14,6 +14,11 @@
     </style>
   </head>
   <body>
+    <input type="text" class="odaIsim" name="oda" value="">
+    <input type="button" class="odaKur" name="odaKur" value="Oda Kur">
+    <br>
+    <br>
+    <br><br><br>
     <ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
@@ -22,16 +27,21 @@
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
 
+var odaAd;
+
     $( document ).ready(function() {
       login();
+
     });
 
-      var socket = io("http://localhost:3000");
+      var socket = io();
 
       function login() {
         var user = prompt("Please enter your name", "");
         if (user != null) {
-            socket.emit('users',user);
+            var oda = prompt("Please enter your room name", "");
+            socket.emit('users',user,oda);
+
         }else {
           login();
         }

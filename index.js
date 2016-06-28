@@ -22,9 +22,13 @@ io.on('connection', function(socket){
 
     Chat.findOne({ where: {socket_id: socket.id} }).then(function(user) {
       // project will be the first entry of the Projects table with the title 'aProject' || null
-      io.emit('chat message', user.user_name+" ---> "+msg);
-
+      // io.emit('chat message', user.user_name+" ---> "+msg);
+        console.log(socket.room);
+        console.log(msg);
+        io.to(socket.room).emit('chat message', user.user_name+" ---------> "+msg);
     });
+
+
   });
 
   socket.on('disconnect', function () {
@@ -32,7 +36,7 @@ io.on('connection', function(socket){
       // socket id si ile eşlesen user ı getir
       io.emit('users', user.user_name+" ---> Disconnected");
       console.log('user disconnected '+user.user_name);
-
+      user.destroy();
     });
   //  io.emit('users','user disconnected '+socket.id);
     //  console.log('user disconnected '+ socket.id);
@@ -41,7 +45,12 @@ io.on('connection', function(socket){
     });
 
 
-    socket.on('users',function(name){
+    socket.on('users',function(name,oda){
+      socket.room= oda;
+      console.log(socket.room);
+      socket.name= name;
+      socket.join(oda);
+
       io.emit('users',name+' connected '+socket.id);
 
 
