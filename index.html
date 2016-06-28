@@ -27,19 +27,20 @@
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
 
-var odaAd;
+    var odaAd;
 
     $( document ).ready(function() {
       login();
-
     });
 
       var socket = io();
 
       function login() {
-        var user = prompt("Please enter your name", "");
+        var user = prompt("Kullanici adı giriniz.", "");
         if (user != null) {
-            var oda = prompt("Please enter your room name", "");
+            var oda = prompt("Katılmak istediğiniz oda adını giriniz.", "");
+
+            // users socketine kullanıcı adını be oda ismini emit ediyoruz.
             socket.emit('users',user,oda);
 
         }else {
@@ -47,7 +48,9 @@ var odaAd;
         }
       };
 
+
       $('form').submit(function(){
+        // mesajı emit ediyoruz.
         socket.emit('chat message', $('#m').val());
         $('#m').val('');
         return false;
@@ -58,6 +61,7 @@ var odaAd;
 
 
       socket.on('users', function(msg){
+        // Kullanıcı giriş ve çıkış yaptıgınında mesaj alanına yazdırıyoruz.
         $('#messages').append($('<li>').text(msg));
       });
     </script>

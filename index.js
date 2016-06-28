@@ -2,16 +2,17 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+// Veritabanı için bağlantılar
 var Sequelize = require('sequelize');
 var sequelize = new Sequelize('chat', 'root', 'root');
 
+// Chat tablosu oluştur.
 var Chat = sequelize.define('Chat', {
   user_name   : Sequelize.STRING,
   socket_id   : Sequelize.STRING
 });
 
 var counter=0;
-
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -21,16 +22,48 @@ io.on('connection', function(socket){
   socket.on('chat message', function(msg){
 
     Chat.findOne({ where: {socket_id: socket.id} }).then(function(user) {
-      // project will be the first entry of the Projects table with the title 'aProject' || null
       // io.emit('chat message', user.user_name+" ---> "+msg);
         console.log(socket.room);
         console.log(msg);
+        // socket oda sına mesajı emit et.
         io.to(socket.room).emit('chat message', user.user_name+" ---------> "+msg);
     });
 
+  });
+
+  // users socketine bir emit olursa burası çalışır ve
+  // Kullanıcıyı veritabanına kaıt eder
+  // Kullanıcıyı kullanıcının verdiği oda ismine join eder
+  socket.on('users',function(name,oda){
+    socket.room= oda;
+    console.log(socket.room);
+
+    socket.name= name;
+    console.log(name);
+
+
+    // Odaya katıl.
+    socket.join(oda);
+
+    io.emit('users',name+' connected '+socket.id);
+
+     // giriş yapan kullanıcı ıcın verıtabanına kayıt acıyoruz.
+      sequelize.sync().then(function() {
+        return Chat.create({
+          user_name  : name,
+          socket_id  : socket.id
+        });
+      }).then(function(test) {
+        // console.log(test.get({
+        //   plain: true
+        // }));
+      });
 
   });
 
+
+// kullanıcı cıkıs yaptıgında buraya emit edilecek
+// buradan kımın cıkıs yaptıgını socket ıd sayesinde veritabanından çekebiliriz.
   socket.on('disconnect', function () {
     Chat.findOne({ where: {socket_id: socket.id} }).then(function(user) {
       // socket id si ile eşlesen user ı getir
@@ -38,35 +71,8 @@ io.on('connection', function(socket){
       console.log('user disconnected '+user.user_name);
       user.destroy();
     });
-  //  io.emit('users','user disconnected '+socket.id);
-    //  console.log('user disconnected '+ socket.id);
       counter--;
       console.log(counter);
-    });
-
-
-    socket.on('users',function(name,oda){
-      socket.room= oda;
-      console.log(socket.room);
-      socket.name= name;
-      socket.join(oda);
-
-      io.emit('users',name+' connected '+socket.id);
-
-
-       // giriş yapan kullanıcı ıcın verıtabanına kayıt acıyoruz.
-        sequelize.sync().then(function() {
-          return Chat.create({
-            user_name  : name,
-            socket_id  : socket.id
-          });
-        }).then(function(test) {
-          // console.log(test.get({
-          //   plain: true
-          // }));
-        });
-
-      console.log(name);
     });
 
 });
@@ -74,8 +80,6 @@ io.on('connection', function(socket){
 
 io.on('connect',function() {
  console.log('dummy user connected');
-
-
   counter++;
   console.log(counter);
 
