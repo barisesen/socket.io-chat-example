@@ -14,31 +14,37 @@
     </style>
   </head>
   <body>
-    <input type="text" class="odaIsim" name="oda" value="">
-    <input type="button" class="odaKur" name="odaKur" value="Oda Kur">
-    <br>
-    <br>
-    <br><br><br>
     <ul id="messages"></ul>
+    <span id="yaziyor" style="color:green;"></span>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
+
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
 
     var odaAd;
+    var user;
+    var oda;
+    var uzunluk;
 
     $( document ).ready(function() {
       login();
     });
 
+    // kullanıcı ekranında örnek barış yazıyor yazısını göndermk için #m inputunun length ini alır
+    $(document).on('keyup','#m',function(){
+        socket.emit('yaziyor',user,oda,($('#m').val().length));
+    });
+
+
       var socket = io();
 
       function login() {
-        var user = prompt("Kullanici adı giriniz.", "");
+         user = prompt("Kullanici adı giriniz.", "");
         if (user != null) {
-            var oda = prompt("Katılmak istediğiniz oda adını giriniz.", "");
+           oda = prompt("Katılmak istediğiniz oda adını giriniz.", "");
 
             // users socketine kullanıcı adını be oda ismini emit ediyoruz.
             socket.emit('users',user,oda);
@@ -48,17 +54,21 @@
         }
       };
 
-
       $('form').submit(function(){
         // mesajı emit ediyoruz.
         socket.emit('chat message', $('#m').val());
         $('#m').val('');
+        socket.emit('yaziyor',user,oda,($('#m').val().length));
+
         return false;
       });
       socket.on('chat message', function(msg){
         $('#messages').append($('<li>').text(msg));
       });
 
+      socket.on('yaziyor',function(msg){
+        $('#yaziyor').append($('#yaziyor').text(msg));
+      });
 
       socket.on('users', function(msg){
         // Kullanıcı giriş ve çıkış yaptıgınında mesaj alanına yazdırıyoruz.
